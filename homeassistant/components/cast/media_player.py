@@ -485,10 +485,19 @@ class CastDevice(MediaPlayerEntity):
                 return
 
             app_name = app_data.pop("app_name")
-            try:
-                quick_play(self._chromecast, app_name, app_data)
-            except NotImplementedError:
-                _LOGGER.error("App %s not supported", app_name)
+            # Special handling for Default Media receiver - uses the vanilla play_media
+            # method, but allows to pass in a media metadata object.
+            if app_name == "Default Media Receiver":
+                self._chromecast.media_controller.play_media(
+                    app_data.get("url"),
+                    app_data.get("content_type"),
+                    metadata=app_data.get("metadata")
+                )
+            else:
+                try:
+                    quick_play(self._chromecast, app_name, app_data)
+                except NotImplementedError:
+                    _LOGGER.error("App %s not supported", app_name)
         else:
             self._chromecast.media_controller.play_media(media_id, media_type)
 
